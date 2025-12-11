@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Integer Game</title>
+<style>
+    /* ----------------- BODY & FONT ----------------- */
+    body {
+        margin: 0;
+        font-family: 'Georgia', serif;
+        text-align: center;
+        overflow: hidden;
+        height: 100vh;
+        color: #FFD700;
+        background: linear-gradient(270deg, #0B3D0B, #B22222, #0B3D0B);
+        background-size: 600% 600%;
+        animation: gradientBG 15s ease infinite;
+    }
+
+    @keyframes gradientBG {
+        0%{background-position:0% 50%;}
+        50%{background-position:100% 50%;}
+        100%{background-position:0% 50%;}
+    }
+
+    h1 {
+        font-size: 3em;
+        margin-top: 20px;
+        color: #FFD700;
+        text-shadow: 2px 2px 8px #B22222;
+    }
+
+    button {
+        background-color: #B22222;
+        color: #FFD700;
+        border: none;
+        padding: 12px 25px;
+        font-size: 16px;
+        margin: 5px;
+        cursor: pointer;
+        border-radius: 8px;
+        box-shadow: 0 0 10px #FFD700;
+        transition: 0.3s;
+    }
+    button:hover {
+        background-color: #8B0000;
+        box-shadow: 0 0 20px #FFD700;
+    }
+
+    input[type=number] {
+        font-size: 16px;
+        padding: 5px;
+        width: 120px;
+        text-align: center;
+        margin: 10px;
+        border-radius: 5px;
+        border: 2px solid #FFD700;
+        background-color: #1a3d1a;
+        color: #FFD700;
+    }
+
+    .hidden {display:none;}
+    .feedback {
+        font-size: 18px;
+        margin-top: 10px;
+        text-shadow: 1px 1px 4px #B22222;
+    }
+    .reward {
+        font-size: 22px;
+        margin-top: 20px;
+        text-shadow: 2px 2px 6px #B22222;
+    }
+
+    /* Sword/Fire animation */
+    .effect {
+        position: absolute;
+        font-size: 30px;
+        animation: floatUp 2s linear forwards;
+        pointer-events: none;
+    }
+    @keyframes floatUp {
+        0% {opacity: 1; transform: translateY(0) scale(1);}
+        100% {opacity: 0; transform: translateY(-100px) scale(1.5);}
+    }
+</style>
+</head>
+<body>
+
+<h1>Integer Game 🗡️🔥</h1>
+
+<div id="difficultyDiv">
+    <p>Select Difficulty:</p>
+    <button onclick="startGame('Easy')">Easy</button>
+    <button onclick="startGame('Medium')">Medium</button>
+    <button onclick="startGame('Hard')">Hard</button>
+</div>
+
+<div id="gameDiv" class="hidden">
+    <p id="question"></p>
+    <input type="number" id="answerInput" placeholder="Your answer">
+    <br>
+    <button onclick="checkAnswer()">Submit Answer 🔥</button>
+    <p id="feedback" class="feedback"></p>
+</div>
+
+<div id="rewardDiv" class="hidden">
+    <p id="rewardText" class="reward"></p>
+    <button onclick="restartGame()">Play Again 🗡️</button>
+</div>
+
+<script>
+let rounds = 5;
+let currentRound = 0;
+let score = 0;
+let numberRange = 10;
+let currentAnswer = 0;
+
+const rewardsText = [
+    "🏆 Slayer Master! Full points! 🔥🗡️✨",
+    "👏 Great job! You earned a Nichirin Blade! 🗡️",
+    "💡 Good effort! You get a Demon Slayer badge! 👹",
+    "🧹 Keep practicing! You get a training scroll! 📜"
+];
+
+// --------------------- GAME FUNCTIONS ---------------------
+function startGame(difficulty) {
+    document.getElementById('difficultyDiv').classList.add('hidden');
+    document.getElementById('gameDiv').classList.remove('hidden');
+    currentRound = 0;
+    score = 0;
+
+    numberRange = difficulty === 'Easy' ? 10 : difficulty === 'Medium' ? 50 : 100;
+    nextQuestion();
+}
+
+function nextQuestion() {
+    if(currentRound >= rounds){
+        gameOver();
+        return;
+    }
+
+    currentRound++;
+    let num1 = Math.floor(Math.random() * numberRange) + 1;
+    let num2 = Math.floor(Math.random() * numberRange) + 1;
+    let operations = ['+', '-', '*', '/'];
+    let op = operations[Math.floor(Math.random() * operations.length)];
+
+    if(op === '/'){
+        num2 = Math.floor(Math.random() * numberRange) + 1;
+        currentAnswer = Math.round((num1 / num2) * 100) / 100;
+    } else if(op === '+') currentAnswer = num1 + num2;
+    else if(op === '-') currentAnswer = num1 - num2;
+    else currentAnswer = num1 * num2;
+
+    document.getElementById('question').innerText = `Round ${currentRound}: 🗡️ What is ${num1} ${op} ${num2}?`;
+    document.getElementById('answerInput').value = '';
+    document.getElementById('feedback').innerText = '';
+}
+
+function checkAnswer() {
+    let userAnswer = parseFloat(document.getElementById('answerInput').value);
+    let feedback = document.getElementById('feedback');
+
+    createEffect(userAnswer === currentAnswer || Math.abs(userAnswer - currentAnswer) < 0.01 ? '✨' : '💥');
+
+    if(isNaN(userAnswer)){
+        feedback.innerText = `❌ Invalid! Correct: ${currentAnswer} 👹`;
+        feedback.style.color = "#B22222";
+    } else if(Math.abs(userAnswer - currentAnswer) < 0.01){
+        score++;
+        feedback.innerText = `✅ Correct! 🔥🗡️`;
+        feedback.style.color = "#FFD700";
+    } else {
+        feedback.innerText = `❌ Wrong! Correct: ${currentAnswer} 👹`;
+        feedback.style.color = "#B22222";
+    }
+
+    setTimeout(nextQuestion, 1200);
+}
+
+function gameOver(){
+    document.getElementById('gameDiv').classList.add('hidden');
+    document.getElementById('rewardDiv').classList.remove('hidden');
+
+    let rewardMsg;
+    if(score === rounds) rewardMsg = rewardsText[0];
+    else if(score >= rounds-1) rewardMsg = rewardsText[1];
+    else if(score >= Math.floor(rounds/2)) rewardMsg = rewardsText[2];
+    else rewardMsg = rewardsText[3];
+
+    document.getElementById('rewardText').innerText = `🎉 Final Score: ${score}/${rounds} 🎉\n${rewardMsg}`;
+}
+
+function restartGame(){
+    document.getElementById('rewardDiv').classList.add('hidden');
+    document.getElementById('difficultyDiv').classList.remove('hidden');
+}
+
+// --------------------- SWORD/FIRE EFFECT ---------------------
+function createEffect(symbol){
+    let effect = document.createElement('div');
+    effect.className = 'effect';
+    effect.innerText = symbol;
+    effect.style.left = Math.random() * window.innerWidth + 'px';
+    document.body.appendChild(effect);
+    setTimeout(() => effect.remove(), 2000);
+}
+</script>
+</body>
+</html>
